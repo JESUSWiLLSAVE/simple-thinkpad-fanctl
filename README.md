@@ -2,7 +2,7 @@
 
 A single-file terminal UI for controlling the fan on ThinkPad laptops under Linux. It talks to the `thinkpad_acpi` driver through `/proc/acpi/ibm/fan`, so there is no config file and nothing to install besides the script itself.
 
-I wrote it for my ThinkPad T14 Gen 1 (AMD) running Linux Mint because I wanted to set the fan speed by hand without setting up thinkfan and writing a config for it. It should work on other ThinkPads too, see the compatibility section below.
+Written for my ThinkPad T14 Gen 1 (AMD) running Linux Mint for the purpose of setting the fan speed by hand without setting up thinkfan and writing a config for it. It should work on other ThinkPads too, see the compatibility section below.
 
 ## Features
 
@@ -21,8 +21,8 @@ left/right or h/l   lower or raise the level
 up/down or k/j      same (also + and -)
 0-4                 jump to a level
 a                   auto (firmware control)
-f                   full speed (very loud)
-q or Esc            quit
+f                   full speed
+q or Esc            quit (resets speed to auto)
 ```
 
 ## Requirements
