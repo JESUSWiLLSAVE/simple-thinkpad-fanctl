@@ -13,6 +13,8 @@ Written for my ThinkPad T14 Gen 1 (AMD) running Linux Mint for the purpose of se
 - Driver watchdog: while a manual level is set, the script feeds it every 30 seconds, so if the script dies or hangs the firmware takes the fan back within two minutes
 - On quit, Ctrl-C, SIGTERM or SIGHUP the fan is returned to auto
 - Only the Python standard library, works in a plain terminal, degrades on monochrome or narrow terminals instead of crashing
+<img width="1030" height="573" alt="max fan" src="https://github.com/user-attachments/assets/80c46c41-ff28-4664-97dc-22a8d395cf67" />
+
 
 ## Keys
 
