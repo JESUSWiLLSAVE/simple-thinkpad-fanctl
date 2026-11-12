@@ -47,13 +47,19 @@ cd simple-thinkpad-fanctl
 python3 fanctl.py
 ```
 
+or just download the script on its own:
+
+```
+curl -LO https://raw.githubusercontent.com/JESUSWiLLSAVE/simple-thinkpad-fanctl/main/fanctl.py
+python3 fanctl.py
+```
+
 ## Compatibility
 
 Tested on a ThinkPad T14 Gen 1 (AMD) with Linux Mint. On this model fan levels 5 to 7 behave the same as 4, so the UI only offers up to 4. If your model has distinct higher levels, change `MAX_LEVEL` at the top of `fanctl.py` back to 7.
 
 In general it should work on any ThinkPad where thinkpad_acpi fan control works. A few things to know:
 
-- Some newer models also need the `experimental=1` module parameter.
 - Not every model supports the `full-speed` level. The script will show "the driver rejected that command" and keep working otherwise.
 - On models with two fans the level applies to both, but the RPM readout only shows one tachometer.
 - This is ThinkPad only. On other laptops the script starts, finds no fan interface, shows an error screen, and changes nothing.
