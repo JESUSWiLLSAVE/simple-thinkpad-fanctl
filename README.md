@@ -1,4 +1,4 @@
-# simple-thinkpad-fanctl
+# Simple ThinkPad Fan Control
 
 A single-file terminal UI for controlling the fan on ThinkPad laptops under Linux. It talks to the `thinkpad_acpi` driver through `/proc/acpi/ibm/fan`, so there is no config file and nothing to install besides the script itself.
 
