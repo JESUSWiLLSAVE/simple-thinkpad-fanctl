@@ -62,5 +62,6 @@ Tested on a ThinkPad T14 Gen 1 (AMD) with Linux Mint. On this model fan levels 5
 In general it should work on any ThinkPad where thinkpad_acpi fan control works. A few things to know:
 
 - Not every model supports the `full-speed` level. The script will show "the driver rejected that command" and keep working otherwise.
+- In full-speed mode some ECs, including the T14 Gen 1 AMD, stop reporting RPM. The script shows n/a instead of a fake 0. The same firmware can also keep the fan at full duty after full-speed until a manual level is written, so the script writes one before switching back to auto.
 - On models with two fans the level applies to both, but the RPM readout only shows one tachometer.
 - The temperature sensor is picked from the usual CPU sensors (k10temp, coretemp, zenpower) and falls back to thermal zones. If none is found the script warns you and runs without overheat protection.
