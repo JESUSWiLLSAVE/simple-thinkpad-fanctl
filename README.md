@@ -8,7 +8,7 @@ Written for my ThinkPad T14 Gen 1 (AMD) running Linux Mint for the purpose of se
 
 - Manual fan levels (0 to 4 plus full speed) or back to firmware auto control, selected with the keyboard
 - Live CPU temperature and fan RPM with bar graphs
-- An ASCII fan that spins at roughly the real fan speed, and turns into a rainbow at full speed
+- An ASCII fan that spins at roughly the real fan speed, turns into RGB at full speed
 - Overheat protection: at 90 °C the fan is forced back to auto and manual levels are refused until the CPU cools below 85 °C
 - Driver watchdog: while a manual level is set, the script feeds it every 30 seconds, so if the script dies or hangs the firmware takes the fan back within two minutes
 - On quit, Ctrl-C, SIGTERM or SIGHUP the fan is returned to auto
@@ -63,4 +63,4 @@ In general it should work on any ThinkPad where thinkpad_acpi fan control works.
 
 Everything goes through `/proc/acpi/ibm/fan`. Reading it gives status, speed and level. Writing accepts commands like `level 3` or `watchdog 120`. The script enables the watchdog when you pick a manual level, so if the process disappears the embedded controller reclaims the fan within 120 seconds. Quitting sets `level auto` and clears the watchdog.
 
-If you want a daemon that follows temperature curves on its own, use thinkfan instead. This one is for poking at the fan by hand.
+If you want a daemon that follows temperature curves on its own, use thinkfan. This is mainly for quick manual control with cool RGB.
