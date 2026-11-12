@@ -47,10 +47,9 @@ cd simple-thinkpad-fanctl
 python3 fanctl.py
 ```
 
-or just download the script on its own:
+or just download [fanctl.py](https://github.com/JESUSWiLLSAVE/simple-thinkpad-fanctl/blob/main/fanctl.py) and run:
 
 ```
-curl -LO https://raw.githubusercontent.com/JESUSWiLLSAVE/simple-thinkpad-fanctl/main/fanctl.py
 python3 fanctl.py
 ```
 
