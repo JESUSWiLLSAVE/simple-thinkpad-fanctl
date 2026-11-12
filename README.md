@@ -61,11 +61,4 @@ In general it should work on any ThinkPad where thinkpad_acpi fan control works.
 
 - Not every model supports the `full-speed` level. The script will show "the driver rejected that command" and keep working otherwise.
 - On models with two fans the level applies to both, but the RPM readout only shows one tachometer.
-- This is ThinkPad only. On other laptops the script starts, finds no fan interface, shows an error screen, and changes nothing.
 - The temperature sensor is picked from the usual CPU sensors (k10temp, coretemp, zenpower) and falls back to thermal zones. If none is found the script warns you and runs without overheat protection.
-
-## How it works
-
-Everything goes through `/proc/acpi/ibm/fan`. Reading it gives status, speed and level. Writing accepts commands like `level 3` or `watchdog 120`. The script enables the watchdog when you pick a manual level, so if the process disappears the embedded controller reclaims the fan within 120 seconds. Quitting sets `level auto` and clears the watchdog.
-
-If you want a daemon that follows temperature curves on its own, use thinkfan. This is mainly for quick manual control with cool RGB.
