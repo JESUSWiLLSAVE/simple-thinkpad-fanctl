@@ -39,6 +39,8 @@ import time
 
 FAN = os.environ.get("FAN_PATH", "/proc/acpi/ibm/fan")
 
+_last_level = "auto"   # the last level fanctl successfully applied
+
 MAX_LEVEL = 4          # highest numbered level offered (5-7 act like 4)
 OPTIONS = ["auto", "0", "1", "2", "3", "4", "full-speed"]
 LABELS = ["AUTO", "0", "1", "2", "3", "4", "MAX"]
@@ -202,6 +204,20 @@ def write_fan(cmd):
         return None
     except OSError as exc:
         return exc
+
+
+def set_auto(prev_level):
+    """Hand the fan back to firmware control. Returns None on success.
+
+    Some EC firmware (a T14 Gen 1 AMD does this) keeps running the fan at
+    full duty after full-speed until a manual level is written, so leave
+    disengaged mode with a plain level before asking for auto.
+    """
+    if canon_level(prev_level) == "full-speed":
+        write_fan(f"level {MAX_LEVEL}")
+    err = write_fan("level auto")
+    write_fan("watchdog 0")
+    return err
 
 
 def explain(exc, info):
@@ -404,7 +420,12 @@ def draw_fan(win, fx, fy, size, phase, blur, rpm, level, hue, pal):
                 x += 1
             put(win, y, fx + start, "".join(text), attr)
     if size == "large":
-        label = f"{rpm} RPM" if rpm else "stopped"
+        if rpm:
+            label = f"{rpm} RPM"
+        elif level == "full-speed":
+            label = "full speed"
+        else:
+            label = "stopped"
         put(win, fy + FAN_SIZES[size]["h"],
             fx + (FAN_SIZES[size]["w"] - len(label)) // 2, label, curses.A_DIM)
 
@@ -441,6 +462,7 @@ def draw(win, info, temp, sel, disp_msg, hot, fan, pal):
         y += 3
     else:
         rpm = info["speed"]
+        tach_ok = rpm > 0 or canon_level(info["level"]) != "full-speed"
         bar_w = max(4, min(30, bw - 20))
         t_txt = f"{temp:5.1f} °C" if temp is not None else "  n/a"
         put(win, y, x0, "CPU temp  ", curses.A_DIM)
@@ -451,7 +473,8 @@ def draw(win, info, temp, sel, disp_msg, hot, fan, pal):
             put(win, y, x0 + 20 + filled, "░" * (bar_w - filled), curses.A_DIM)
         y += 1
         put(win, y, x0, "Fan speed ", curses.A_DIM)
-        put(win, y, x0 + 10, f"{rpm:5d} RPM", pal.p(4) | curses.A_BOLD)
+        put(win, y, x0 + 10, f"{rpm:5d} RPM" if tach_ok else " n/a RPM",
+            pal.p(4) | curses.A_BOLD)
         filled = max(0, min(bar_w, int(rpm / MAX_RPM * bar_w)))
         put(win, y, x0 + 20, "█" * filled, pal.p(4))
         put(win, y, x0 + 20 + filled, "░" * (bar_w - filled), curses.A_DIM)
@@ -536,6 +559,7 @@ def run(stdscr):
     phase = 0.0
     vis_rps = 0.0
     fails = 0
+    tach_note_shown = False
     now0 = time.time()
     last_frame = now0
     last_poll = 0.0
@@ -555,15 +579,17 @@ def run(stdscr):
     def apply(i):
         """Set level i. Returns True on success."""
         nonlocal last_apply, msg, msg_until, dirty
+        global _last_level
         if OPTIONS[i] != "auto":
             write_fan(f"watchdog {WATCHDOG_SECS}")
-        err = write_fan("level " + OPTIONS[i])
+            err = write_fan("level " + OPTIONS[i])
+        else:
+            err = set_auto(_last_level)
         last_apply = time.time()
         if err:
             set_msg("Error: " + explain(err, info), 8)
             return False
-        if OPTIONS[i] == "auto":
-            write_fan("watchdog 0")
+        _last_level = OPTIONS[i]
         msg, msg_until = "", 0.0
         dirty = True
         return True
@@ -623,16 +649,22 @@ def run(stdscr):
         dt = min(max(now - last_frame, 0.0), 0.1)
         last_frame = now
         rpm = info["speed"] if info else 0
-        vis_rps += (visual_rps(rpm) - vis_rps) * min(1.0, dt * 2.5)
-        if rpm == 0 and vis_rps < 0.01:
+        fan_level = canon_level(info["level"]) if info else "auto"
+        # some ECs freeze the tachometer at 0 in full-speed; the fan is
+        # actually running, so keep the animation going
+        anim_rpm = rpm if rpm > 0 else MAX_RPM if fan_level == "full-speed" else 0
+        vis_rps += (visual_rps(anim_rpm) - vis_rps) * min(1.0, dt * 2.5)
+        if anim_rpm == 0 and vis_rps < 0.01:
             vis_rps = 0.0
         if vis_rps > 0.0:
             phase = (phase + vis_rps * 2 * math.pi * dt) % (2 * math.pi)
 
-        # the drawn fan is coloured by the level the driver reports
-        fan_level = canon_level(info["level"]) if info else "auto"
         rainbow_on = fan_level == "full-speed" or OPTIONS[sel] == "full-speed"
         hue = (now * RAINBOW_HZ) % 1.0
+
+        if fan_level == "full-speed" and rpm == 0 and not tach_note_shown:
+            tach_note_shown = True
+            set_msg("Full-speed: this EC stops reporting RPM, the fan is running.", 8)
 
         if msg and now < msg_until:      # a fresh message beats the banner
             disp = msg
@@ -712,8 +744,7 @@ def main():
     except curses.error as exc:
         print(f"fanctl: terminal error: {exc}", file=sys.stderr)
     finally:
-        err = write_fan("level auto")
-        write_fan("watchdog 0")
+        err = set_auto(_last_level)
         if err:
             print(f"fanctl: could not restore auto fan control: "
                   f"{explain(err, None)}", file=sys.stderr)
